@@ -1,0 +1,18 @@
+transcript:
+  whisper:
+    model_name: openai/whisper-large-v3
+    max_chunk_size: 20
+    use_shared_cache: false
+  whisperx:
+    model_name: base
+entities:
+  model_name: urchade/gliner_multi
+  fuzzy_search_locations: true
+  fuzzy_threshold: 95
+topics:
+  model_name: llama3.3:70b-instruct-q8_0
+thesauri:
+  uris:
+    - http://data.beeldengeluid.nl/gtaa/Onderwerpen
+    - http://data.beeldengeluid.nl/gtaa/Persoonsnamen
+    - http://data.beeldengeluid.nl/gtaa/Namen

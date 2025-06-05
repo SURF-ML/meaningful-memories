@@ -1,0 +1,19 @@
+[project]
+name = "meaningful_memories"
+dynamic = ["version"]
+
+dependencies = [
+    "gliner",
+    "librosa",
+    "numpy",
+    "ollama",
+    "pydub",
+    "rapidfuzz",
+    "rdflib",
+    "transformers",
+    "whisperx",
+]
+
+[tool.setuptools]
+include-package-data = true
+py-modules = []
