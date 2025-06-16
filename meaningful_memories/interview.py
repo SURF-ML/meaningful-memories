@@ -2,13 +2,14 @@ import json
 import logging
 import os
 import re
+import uuid
 from pathlib import Path
 from typing import Optional
-import uuid
 
-from meaningful_memories.transcript import Transcript
-from meaningful_memories.utils import color_entities_html, extract_audio_from_video
 from meaningful_memories.annotation_utils import generate_web_annotations
+from meaningful_memories.transcript import Transcript
+from meaningful_memories.utils import (color_entities_html,
+                                       extract_audio_from_video)
 
 
 class Interview:
@@ -24,6 +25,8 @@ class Interview:
         self.audio_path = None
         self.video_path = None
         self.interview_label = interview_label
+        if not len(self.original_uri):
+            self.original_uri = self.interview_label
         if not input_dir:
             logging.info(
                 "Initializing interview object without path. Won't be able to run input conversion."
@@ -147,7 +150,7 @@ class Interview:
                 f"<!DOCTYPE html>\n<html>\n<head><meta charset='UTF-8' name='viewport' content='width=device-width, initial-scale=1'>>\n</head>\n<body>\n{all_chunks_marked}\n</body>\n</html>"
             )
 
-    def write_to_file(self):
+    def write_to_file(self, args):
         entity_results = []
 
         for i, ent in enumerate(self.entities):
@@ -186,7 +189,12 @@ class Interview:
             "topics_chunk": self.chunk_topics,
             "topics_aggregate": self.topics,
             "locations_chunk": [
-                {"chunk_id": loc["chunk_id"], "locations": [llm_loc.dict() for llm_loc in loc["locations"].locations]}
+                {
+                    "chunk_id": loc["chunk_id"],
+                    "locations": [
+                        llm_loc.dict() for llm_loc in loc["locations"].locations
+                    ],
+                }
                 for loc in self.chunk_locations
             ],
             "transcript_chunks": [
@@ -204,7 +212,9 @@ class Interview:
         ) as f:
             json.dump(output_data, f)
 
-        w3_annotations = generate_web_annotations(output_data, self.original_uri)
+        w3_annotations = generate_web_annotations(
+            output_data, self.interview_label, text_only=args.text_only
+        )
         with open(
             os.path.join(self.input_dir, "annotations.jsonld"), "w", encoding="utf-8"
         ) as f:

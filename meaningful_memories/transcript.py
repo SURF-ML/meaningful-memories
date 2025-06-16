@@ -84,7 +84,9 @@ class Transcript:
             next_duration = end - current_start
             speaker_matches = speaker == current_speaker
 
-            if next_duration > self.max_length or (keep_same_speaker and not speaker_matches):
+            if next_duration > self.max_length or (
+                keep_same_speaker and not speaker_matches
+            ):
                 combined_text = " ".join(seg["text"] for seg in current_chunk)
                 self.chunks.append(
                     TranscriptChunk(combined_text, chunk_id, current_start, current_end)

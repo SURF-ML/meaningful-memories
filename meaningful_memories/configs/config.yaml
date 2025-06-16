@@ -4,7 +4,7 @@ transcript:
     max_chunk_size: 20
     use_shared_cache: false
   whisperx:
-    model_name: base
+    model_name: large-v3
 entities:
   model_name: urchade/gliner_multi
   fuzzy_search_locations: true

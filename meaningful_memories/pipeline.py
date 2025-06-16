@@ -2,15 +2,14 @@ import argparse
 import logging
 import os
 
-from meaningful_memories.extracter import (
-    EntityExtracter,
-    LLMLocationExtracter,
-    LLMTopicExtracter,
-)
+from meaningful_memories.extracter import (EntityExtracter,
+                                           LLMLocationExtracter,
+                                           LLMTopicExtracter)
 from meaningful_memories.interview import Interview
-from meaningful_memories.transcriber import WhisperTranscriber, WhisperXTranscriber
-from meaningful_memories.utils import read_json
+from meaningful_memories.transcriber import (WhisperTranscriber,
+                                             WhisperXTranscriber)
 from meaningful_memories.transcript import Transcript
+from meaningful_memories.utils import read_json
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,7 +36,7 @@ def process_interview_sample(args):
                 location_extracter.extract(interview)
         interview.combine_chunks()
         interview.visualize()
-        interview.write_to_file()
+        interview.write_to_file(args)
     else:
         interview.load_from_file()
         interview.visualize()
@@ -68,9 +67,39 @@ def process_interview_batch(args, interviews):
         for interview in interviews:
             interview.combine_chunks()
             interview.visualize()
-            interview.write_to_file()
+            interview.write_to_file(args)
     else:
         for interview in interviews:
+            interview.load_from_file()
+            interview.visualize()
+
+
+def process_interview_batch_sequential(args, interviews):
+    for interview in interviews:
+
+        if not args.skip_transcribe:
+            # transcriber = WhisperTranscriber()
+            # for interview in interviews:
+            #     transcriber.transcribe(interview)
+            transcriber = WhisperXTranscriber()
+            transcriber.transcribe(interview)
+
+        if not args.skip_extract:
+            extracter = EntityExtracter()
+            if args.include_llm_topics:
+                topic_extracter = LLMTopicExtracter()
+                location_extracter = LLMLocationExtracter()
+            extracter.extract(interview)
+            if args.include_llm_topics:
+                topic_extracter.extract(interview)
+                topic_extracter.aggregate_topics(interview)
+                location_extracter.extract(interview)
+
+        if not args.post_process_only:
+            interview.combine_chunks()
+            interview.visualize()
+            interview.write_to_file(args)
+        else:
             interview.load_from_file()
             interview.visualize()
 
@@ -139,6 +168,15 @@ def main():
             logging.info(f"Running batch processing on {args.input_dir}...")
             interviews = []
             for dir in os.listdir(args.input_dir):
+                if any(
+                    f.endswith(".json")
+                    for f in os.listdir(os.path.join(args.input_dir, dir))
+                    if os.path.isfile(
+                        os.path.join(os.path.join(args.input_dir, dir), f)
+                    )
+                ):
+                    logging.info(f"Skipping {dir}, already processed")
+                    continue
                 logging.info(f"Running pipeline for {dir}")
                 interviews.append(
                     Interview(
@@ -146,7 +184,7 @@ def main():
                         skip_convert=args.skip_convert,
                     )
                 )
-            process_interview_batch(args, interviews)
+            process_interview_batch_sequential(args, interviews)
         else:
             process_interview_sample(args)
 

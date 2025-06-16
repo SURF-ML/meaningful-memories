@@ -16,7 +16,9 @@ class WhisperTranscriber:
 
     def load_model(self):
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        cache_dir = get_cache_kwargs() if config.transcript.whisper.use_shared_cache else {}
+        cache_dir = (
+            get_cache_kwargs() if config.transcript.whisper.use_shared_cache else {}
+        )
         self.model = pipeline(
             "automatic-speech-recognition",
             model=self.model_name,
@@ -64,7 +66,7 @@ class WhisperXTranscriber:
             return_char_alignments=False,
         )
 
-        #print(result["segments"])  # after alignment
+        # print(result["segments"])  # after alignment
 
         diarize_model = whisperx.DiarizationPipeline(device=self.device)
 

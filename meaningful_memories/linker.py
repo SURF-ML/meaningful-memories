@@ -47,9 +47,9 @@ class LocationLinker(Linker):
         else:
             match = self.street_data[streetname]
         if match:
-            return match["wikidata"], match["adamlink_uri"]
+            return match["preflabel"], match["wikidata"], match["adamlink_uri"]
         else:
-            return "", ""
+            return "", "", ""
 
     def find_building_match(self, building_name):
         match_results = self.building_data.get_subject_by_label(building_name)

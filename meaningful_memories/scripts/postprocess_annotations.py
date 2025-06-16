@@ -1,9 +1,9 @@
 import argparse
-import logging
+import copy
 import json
+import logging
 import os
 import re
-import copy
 
 logging.basicConfig(level=logging.INFO)
 
@@ -27,6 +27,7 @@ def extract_entities_from_labelstudio_results(results):
             grouped[region_id][r["from_name"]] = r["value"]["text"][0]
 
     return list(grouped.values())
+
 
 def update_entity_file_with_labelstudio(original_path, labelstudio_result, output_path):
     with open(original_path, "r") as f:
@@ -54,8 +55,9 @@ def update_entity_file_with_labelstudio(original_path, labelstudio_result, outpu
 
 def normalize_filename(name):
     name = os.path.splitext(name)[0]
-    name = re.sub(r'[^a-z0-9]', '', name.lower())
+    name = re.sub(r"[^a-z0-9]", "", name.lower())
     return name
+
 
 def find_matching_original_file(file_upload_value, original_dir):
     norm_upload = normalize_filename(file_upload_value)
@@ -71,9 +73,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Pipeline for running transcription and entity extraction. "
     )
-    parser.add_argument(
-        "-l", "--ls-input", help="Path to LabelStudio export file."
-    )
+    parser.add_argument("-l", "--ls-input", help="Path to LabelStudio export file.")
     parser.add_argument(
         "-p", "--pred-input", help="Path to folder containing original predictions."
     )

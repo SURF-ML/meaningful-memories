@@ -1,11 +1,10 @@
 import html
+import json
 import os
 
 import librosa
 import soundfile as sf
 from pydub import AudioSegment
-
-import json
 
 
 def get_cache_kwargs():
@@ -37,10 +36,20 @@ def create_small_sample(input_path, out_dir, start=10000, end=300000):
     new_audio = new_audio[start:end]
     new_audio.export(os.path.join(out_dir, "interview_sample.wav"), format="wav")
 
+
 def read_json(input_path):
     interviews = []
     with open(input_path) as f:
         data = json.load(f)
     for interview in data:
-        interviews.append({"original_uri": interview["@id"], "headline": interview["headline"], "text": [{"text": interview["description"]}, {"text": interview["articleBody"]}]})
+        interviews.append(
+            {
+                "original_uri": interview["@id"],
+                "headline": interview["headline"],
+                "text": [
+                    {"text": interview["description"]},
+                    {"text": interview["articleBody"]},
+                ],
+            }
+        )
     return interviews

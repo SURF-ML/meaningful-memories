@@ -53,12 +53,16 @@ class EntityExtracter(Extracter):
     def add_location_id(self, entity: dict):
         if entity["label"] != "Location":
             return entity
-        wikidata, adamlink = self.location_linker.find_street_match(entity["text"])
+        preflabel, wikidata, adamlink = self.location_linker.find_street_match(
+            entity["text"]
+        )
+        entity["preflabel"] = preflabel
         entity["wikidata"] = wikidata
         entity["adamlink"] = adamlink
         if not wikidata:
             adamlink = self.location_linker.find_building_match(entity["text"])
             entity["adamlink"] = adamlink
+            entity["preflabel"] = entity["text"]
         return entity
 
     def add_subject_id(self, entity: dict):
