@@ -4,7 +4,7 @@ import re
 import uuid
 
 from meaningful_memories import here
-
+from meaningful_memories.utils import get_adamlink_coordinates
 
 def get_non_truncated_context(text, start, end, min_context_len=30):
     exact = text[start:end]
@@ -42,7 +42,7 @@ def look_up_uri(str_identifier):
 def generate_web_annotations(data, original_uri: str = "", text_only=False):
     w3_annotations = []
     name, identifier, video_id = look_up_uri(original_uri)
-    for i, ent in enumerate(data["entities"]):
+    for ent in data["entities"]:
         body = [
             {"type": "TextualBody", "value": ent["label"], "purpose": "classifying"}
         ]
@@ -50,18 +50,21 @@ def generate_web_annotations(data, original_uri: str = "", text_only=False):
         for datalink in ["wikidata", "adamlink"]:
             datalink_value = ent.get(datalink) or ent.get("metadata", {}).get(datalink)
             if datalink_value:
-                body.append(
-                    {
+                resource = {
                         "type": "SpecificResource",
                         "purpose": "identifying",
                         "source": {
+                            "@context": "https://schema.org",
                             "id": datalink_value,
                             "type": "Place",
-                            "label": datalink_value,
-                            "preflabel": ent.get("preflabel"),
+                            "label": ent.get("preflabel"),
                         },
                     }
-                )
+                if datalink == "adamlink":
+                    long, lat = get_adamlink_coordinates(datalink_value)
+                    resource["source"]["longitude"] = long
+                    resource["source"]["latitude"] = lat
+                body.append(resource)
 
         start = ent["global_start"]
         end = ent["global_end"]
@@ -81,18 +84,52 @@ def generate_web_annotations(data, original_uri: str = "", text_only=False):
                 {
                     "type": "FragmentSelector",
                     "conformsTo": "http://www.w3.org/TR/media-frags/",
-                    "values": f"t={ent['timestamps'][0]}:{ent['timestamps'][1]}",
+                    "values": f"t={ent['timestamps'][0]},{ent['timestamps'][1]}",
                 }
             )
+            source = {"@context": "https://schema.org",
+        "id": video_id,
+        "type": "VideoObject",
+        "name": name,},
+
+        else:
+            source = {"id": original_uri}
 
         w3_annotations.append(
             {
-                "@context": "https://schema.org",
+                "@context": "http://www.w3.org/ns/anno.jsonld",
                 "id": str(uuid.uuid4()),
                 "type": "Annotation",
                 "body": body,
-                "target": {"source": identifier, "selector": selector},
+                "target": {
+                    "source": source,
+                    "selector": selector},
             }
         )
+    topics = [topic[0] for topic in data["topics_aggregate"]]    # topics are tuples (topic, count)
+    for topic in topics:
+        body = [
+            {"type": "TextualBody", "value": topic, "purpose": "classifying"}
+        ]
+        if not text_only:
+            source = {"@context": "https://schema.org",
+                      "id": video_id,
+                      "type": "VideoObject",
+                      "name": name, },
+
+        else:
+            source = {"id": original_uri}
+
+        w3_annotations.append(
+            {
+                "@context": "http://www.w3.org/ns/anno.jsonld",
+                "id": str(uuid.uuid4()),
+                "type": "Annotation",
+                "body": body,
+                "target": {
+                    "source": source,}
+            }
+        )
+
 
     return w3_annotations

@@ -168,15 +168,15 @@ def main():
             logging.info(f"Running batch processing on {args.input_dir}...")
             interviews = []
             for dir in os.listdir(args.input_dir):
-                if any(
-                    f.endswith(".json")
-                    for f in os.listdir(os.path.join(args.input_dir, dir))
-                    if os.path.isfile(
-                        os.path.join(os.path.join(args.input_dir, dir), f)
-                    )
-                ):
-                    logging.info(f"Skipping {dir}, already processed")
-                    continue
+                # if any(
+                #     f.endswith(".json")
+                #     for f in os.listdir(os.path.join(args.input_dir, dir))
+                #     if os.path.isfile(
+                #         os.path.join(os.path.join(args.input_dir, dir), f)
+                #     )
+                # ):
+                #     logging.info(f"Skipping {dir}, already processed")
+                #     continue
                 logging.info(f"Running pipeline for {dir}")
                 interviews.append(
                     Interview(
@@ -184,7 +184,7 @@ def main():
                         skip_convert=args.skip_convert,
                     )
                 )
-            process_interview_batch_sequential(args, interviews)
+            process_interview_batch(args, interviews)
         else:
             process_interview_sample(args)
 

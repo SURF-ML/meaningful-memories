@@ -5,6 +5,9 @@ import os
 import librosa
 import soundfile as sf
 from pydub import AudioSegment
+from meaningful_memories import here
+import csv
+from collections import defaultdict
 
 
 def get_cache_kwargs():
@@ -53,3 +56,15 @@ def read_json(input_path):
             }
         )
     return interviews
+
+
+def get_adamlink_coordinates(uri):
+    loc_data = defaultdict(list)
+    path = os.path.join(here, "data/adamlink_streets_buildings.csv")
+    with open(path, mode="r", newline="") as file:
+        reader = csv.DictReader(file, delimiter=",")
+        for row in reader:
+            loc_data[row["adamlink_uri"]] = row
+    if loc_data[uri]:
+        return loc_data[uri]["longitude"], loc_data[uri]["latitude"]
+    return 0,0

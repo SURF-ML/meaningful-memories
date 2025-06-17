@@ -1,6 +1,9 @@
 [project]
 name = "meaningful_memories"
 dynamic = ["version"]
+packages = [
+  { include = "meaningful_memories" }
+]
 
 dependencies = [
     "gliner",
@@ -9,7 +12,6 @@ dependencies = [
     "ollama",
     "pydub",
     "rapidfuzz",
-    "rdflib",
     "transformers",
     "whisperx",
 ]

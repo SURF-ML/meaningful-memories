@@ -37,7 +37,7 @@ class Interview:
                 self.load_video_path()
                 logging.info(f"Converting {self.video_path} to audio (WAV).")
                 extract_audio_from_video(self.video_path, self.audio_path)
-            self.interview_label = self.input_dir.stem
+            self.interview_label = os.path.basename(self.input_dir)
         self.transcript = None
         self.entities = []
         self.chunk_topics = []
@@ -167,12 +167,13 @@ class Interview:
                         "text": ent["text"],
                         "labels": [ent["label"]],
                         "timestamps": ent["timestamps"],
-                        "wikidatata": ent.get("wikidata", ""),
+                        "wikidata": ent.get("wikidata", ""),
                         "adamlink": ent.get("adamlink", ""),
+                        "preflabel": ent.get("preflabel", ""),
                     },
                 }
             )
-            for datalink in ["wikidata", "adamlink"]:
+            for datalink in ["wikidata", "adamlink", "preflabel"]:
                 if datalink in ent and ent[datalink]:
                     entity_results.append(
                         {

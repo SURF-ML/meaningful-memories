@@ -5,8 +5,6 @@ from collections import defaultdict
 
 import requests
 from rapidfuzz import process
-from rdflib import Graph, Literal, Namespace
-from rdflib.namespace import RDFS
 
 from meaningful_memories import here
 from meaningful_memories.config import config
@@ -19,65 +17,35 @@ class Linker:
 
 class LocationLinker(Linker):
     def __init__(self):
-        self.data_path = os.path.join(here, "data/streets.csv")
-        self.street_data = defaultdict(list)
-        self.building_data = None
-        if not self.street_data:
+        self.data_path = os.path.join(here, "data/adamlink_streets_buildings.csv")
+        self.location_data = defaultdict(list)
+        self.skip_list = ["Nederland", "Europa"]  # too often extracted and unlikely as buildings in Amsterdam
+        if not self.location_data:
             self.load_data()
-        if not self.building_data:
-            self.building_data = Buildings(
-                os.path.join(here, "data/adamlinkgebouwen.ttl")
-            )
 
     def load_data(self):
         with open(self.data_path, mode="r", newline="") as file:
-            reader = csv.DictReader(file, delimiter=";")
+            reader = csv.DictReader(file, delimiter=",")
             for row in reader:
-                self.street_data[row["preflabel"]] = row
+                self.location_data[row["preflabel"]] = row
 
-    def find_street_match(self, streetname: str):
-        streetname = streetname.title()
+    def find_location_match(self, location: str):
+        location = location.title()
+        if location in self.skip_list:
+            return "", "", "", "", ""
         if config.entities.fuzzy_search_locations:
             match = process.extractOne(
-                streetname,
-                self.street_data.keys(),
+                location,
+                self.location_data.keys(),
                 score_cutoff=config.entities.fuzzy_threshold,
             )
-            match = self.street_data.get(match[0]) if match else None
+            match = self.location_data.get(match[0]) if match else None
         else:
-            match = self.street_data[streetname]
+            match = self.location_data[location]
         if match:
-            return match["preflabel"], match["wikidata"], match["adamlink_uri"]
+            return match["preflabel"], match["wikidata"], match["adamlink_uri"], match["longitude"], match["latitude"]
         else:
-            return "", "", ""
-
-    def find_building_match(self, building_name):
-        match_results = self.building_data.get_subject_by_label(building_name)
-        if match_results:
-            return match_results[0]  # currently only returning first result
-
-    # TODO: skip buildings: "Nederland", "Europa"
-
-
-class Buildings:
-    def __init__(self, file_path):
-        """
-        Initializes and loads the Turtle file into an RDF graph.
-        :param file_path: Path to the Turtle file
-        """
-        self.graph = Graph()
-        self.graph.parse(file_path, format="turtle")
-
-    def get_subject_by_label(self, label_value):
-        """
-        Finds the subject (key) associated with a given rdfs:label.
-        """
-        return [
-            str(subject)
-            for subject in self.graph.subjects(
-                predicate=RDFS.label, object=Literal(label_value)
-            )
-        ]
+            return "", "", "", "", ""
 
 
 class SubjectLinker(Linker):

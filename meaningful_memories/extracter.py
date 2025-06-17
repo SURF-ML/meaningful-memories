@@ -53,16 +53,18 @@ class EntityExtracter(Extracter):
     def add_location_id(self, entity: dict):
         if entity["label"] != "Location":
             return entity
-        preflabel, wikidata, adamlink = self.location_linker.find_street_match(
+        preflabel, wikidata, adamlink, longitude, latitude = self.location_linker.find_location_match(
             entity["text"]
         )
         entity["preflabel"] = preflabel
         entity["wikidata"] = wikidata
         entity["adamlink"] = adamlink
-        if not wikidata:
-            adamlink = self.location_linker.find_building_match(entity["text"])
-            entity["adamlink"] = adamlink
-            entity["preflabel"] = entity["text"]
+        entity["longitude"] = longitude
+        entity["latitude"] = latitude
+        # if not wikidata:
+        #     adamlink = self.location_linker.find_building_match(entity["text"])
+        #     entity["adamlink"] = adamlink
+        #     entity["preflabel"] = entity["text"]
         return entity
 
     def add_subject_id(self, entity: dict):
@@ -86,7 +88,7 @@ class LLMTopicExtracter(Extracter):
         return [
             {
                 "role": "system",
-                "content": "You are an assistant helping with finding relevant themes and concepts in a piece of Dutch text. Focus on larger and more abstract themes. Reply always in Dutch. Return the list of concepts only, do not explain yourself or summarize the text.",
+                "content": "You are an assistant helping with finding relevant themes and concepts in a piece of Dutch text. Focus on larger and more abstract themes. Always reply in Dutch. Return the list of concepts only, do not explain yourself or summarize the text.",
             },
             {
                 "role": "user",
