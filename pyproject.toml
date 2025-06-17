@@ -1,9 +1,10 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "meaningful_memories"
 dynamic = ["version"]
-packages = [
-  { include = "meaningful_memories" }
-]
 
 dependencies = [
     "gliner",
@@ -12,10 +13,13 @@ dependencies = [
     "ollama",
     "pydub",
     "rapidfuzz",
+    "torch",
+    "torchaudio",
+    "torchvision",
     "transformers",
     "whisperx",
 ]
 
-[tool.setuptools]
-include-package-data = true
-py-modules = []
+
+[tool.setuptools.packages.find]
+include = ["meaningful_memories"]
